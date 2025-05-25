@@ -1,0 +1,45 @@
+services:
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+    networks:
+      - public
+      - private
+
+  app:
+    build: ./app
+    environment:
+      - DB_HOST=db
+      - DB_NAME=testdb
+      - DB_USER=testuser
+      - DB_PASS=testpass
+    networks:
+      - private
+
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: testdb
+      POSTGRES_USER: testuser
+      POSTGRES_PASSWORD: testpass
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - private
+
+volumes:
+  dbdata:
+      driver: local
+      
+networks:
+  public:
+    driver: bridge
+  private:
+    driver: bridge
+    internal: true
